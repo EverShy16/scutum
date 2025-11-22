@@ -1,0 +1,8 @@
+{
+  "block.scutum.basic_projector": "Basic Projector",
+  "block.scutum.advanced_projector": "Advanced Projector",
+  "block.scutum.forcefield": "Forcefield",
+  "itemGroup.scutum": "Scutum",
+  "tooltip.scutum.basic": "Creates a small forcefield dome",
+  "tooltip.scutum.advanced": "Creates a larger forcefield dome"
+}

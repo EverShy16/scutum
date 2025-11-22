@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["PCP","CGC","PPP"],
+  "key": {
+    "P": { "tag": "scutum:copper_sheets" },
+    "C": { "item": "minecraft:copper_ingot" },
+    "G": { "item": "minecraft:glass" }
+  },
+  "result": { "item": "scutum:basic_projector", "count": 1 }
+}
