@@ -19,11 +19,26 @@ public final class ProjectorAPI {
         return null;
     }
 
-    public static boolean tryClaimForcefield(BlockPos claimantPos, BlockPos fieldPos, ServerWorld world) {
-        // Not implemented: placeholder for takeover logic
-        return false;
-    }
+    public static boolean tryClaimForcefield(BlockPos claimantPos, BlockPos fieldPos, ServerWorld world) { return false; }
 
     public static int getPerBreakDamage() { return ProjectorConfig.getPerBreakDamage(); }
-    public static void setPerBreakDamage(int v) { ProjectorConfig.setPerBreakDamage(v); }
+    public static void setPerBreakDamage(int v) { ConfigManager.setPerBreakDamage(v); }
+
+    public static double getBasicDurabilityMultiplier() { return ProjectorConfig.getBasicDurabilityMultiplier(); }
+    public static void setBasicDurabilityMultiplier(double v) { ConfigManager.setBasicDurabilityMultiplier(v); }
+
+    public static double getAdvancedDurabilityMultiplier() { return ProjectorConfig.getAdvancedDurabilityMultiplier(); }
+    public static void setAdvancedDurabilityMultiplier(double v) { ConfigManager.setAdvancedDurabilityMultiplier(v); }
+
+    public static double getBasicEnergyMultiplier() { return ProjectorConfig.getBasicEnergyMultiplier(); }
+    public static void setBasicEnergyMultiplier(double v) { ConfigManager.setBasicEnergyMultiplier(v); }
+
+    public static double getAdvancedEnergyMultiplier() { return ProjectorConfig.getAdvancedEnergyMultiplier(); }
+    public static void setAdvancedEnergyMultiplier(double v) { ConfigManager.setAdvancedEnergyMultiplier(v); }
+
+    public static int getMinEnergyCostPerTick() { return ProjectorConfig.getMinEnergyCostPerTick(); }
+    public static void setMinEnergyCostPerTick(int v) { ConfigManager.setMinEnergyCostPerTick(v); }
+
+    public static double getExplosionDamageScale() { return ProjectorConfig.getExplosionDamageScale(); }
+    public static void setExplosionDamageScale(double v) { ConfigManager.setExplosionDamageScale(v); }
 }

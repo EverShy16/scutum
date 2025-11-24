@@ -2,6 +2,7 @@ package scutum;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Material;
 import net.minecraft.block.Block;
@@ -34,6 +35,8 @@ public class ProjectorMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        ConfigManager.load();
+
         Registry.register(Registry.BLOCK, id("forcefield"), FORCEFIELD_BLOCK);
         Registry.register(Registry.ITEM, id("forcefield"), new BlockItem(FORCEFIELD_BLOCK, new Item.Settings().group(ItemGroup.DECORATIONS)));
 
@@ -52,10 +55,10 @@ public class ProjectorMod implements ModInitializer {
         PROJECTOR_SCREEN_HANDLER = Registry.register(Registry.SCREEN_HANDLER, id("projector_screen"),
                 new ScreenHandlerType<>(ProjectorScreenHandler::new));
 
-        // Init tracker for GUI sync
         ProjectorScreenHandlerTracker.init();
 
-        // Networking receivers
+        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> { ConfigCommand.register(dispatcher); });
+
         ServerPlayNetworking.registerGlobalReceiver(TOGGLE_PREVIEW_PACKET, (server, player, handler, buf, responseSender) -> {
             var pos = buf.readBlockPos();
             boolean preview = buf.readBoolean();

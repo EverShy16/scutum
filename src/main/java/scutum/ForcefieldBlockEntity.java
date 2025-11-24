@@ -24,7 +24,7 @@ public class ForcefieldBlockEntity extends BlockEntity {
             Object val = m.invoke(explosion);
             if (val instanceof Number) power = ((Number) val).floatValue();
         } catch (Exception ignored) {}
-        int damage = Math.max(1, (int) Math.ceil(power * 2.0f));
+        int damage = Math.max(1, (int) Math.ceil(power * ProjectorConfig.getExplosionDamageScale()));
         if (world instanceof ServerWorld sw) {
             var be = sw.getBlockEntity(ownerPos);
             if (be instanceof ProjectorBlockEntity pbe) pbe.applyFieldDamage(damage);
@@ -41,8 +41,6 @@ public class ForcefieldBlockEntity extends BlockEntity {
         }
     }
 
-    @Override
-    public void writeNbt(NbtCompound nbt) { super.writeNbt(nbt); if (ownerPos != null) nbt.putLong("OwnerPos", ownerPos.asLong()); }
-    @Override
-    public void readNbt(NbtCompound nbt) { super.readNbt(nbt); if (nbt.contains("OwnerPos")) ownerPos = BlockPos.fromLong(nbt.getLong("OwnerPos")); }
+    @Override public void writeNbt(NbtCompound nbt) { super.writeNbt(nbt); if (ownerPos != null) nbt.putLong("OwnerPos", ownerPos.asLong()); }
+    @Override public void readNbt(NbtCompound nbt) { super.readNbt(nbt); if (nbt.contains("OwnerPos")) ownerPos = BlockPos.fromLong(nbt.getLong("OwnerPos")); }
 }
