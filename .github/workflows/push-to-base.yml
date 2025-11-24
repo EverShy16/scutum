@@ -1,0 +1,75 @@
+name: push-to-base
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_branch:
+        description: 'Branch to push changes directly to'
+        required: false
+        default: '1.21.1'
+      commit_message:
+        description: 'Commit message for the changes'
+        required: false
+        default: 'Apply changes from .changes'
+      author_name:
+        description: 'Commit author name'
+        required: false
+        default: 'EverShy'
+      author_email:
+        description: 'Commit author email'
+        required: false
+        default: 'evershy@github.com'
+
+jobs:
+  apply_and_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.base_branch }}
+
+      - name: Copy files from .changes into repo root
+        run: |
+          set -e
+          if [ ! -d ".changes" ]; then
+            echo "No .changes folder found. Put files you want to apply into a .changes/ directory and re-run."
+            exit 1
+          fi
+          rsync -a --delete .changes/ .
+
+      - name: Stage changes
+        run: |
+          git add -A
+          echo "Files staged (if any):"
+          git status --porcelain
+
+      - name: Configure git author
+        run: |
+          git config user.name "${{ inputs.author_name }}"
+          git config user.email "${{ inputs.author_email }}"
+
+      - name: Commit changes if any
+        id: commit
+        run: |
+          if git diff --cached --quiet; then
+            echo "no_changes=true" >> $GITHUB_OUTPUT
+            echo "No changes to commit."
+          else
+            git commit -m "${{ inputs.commit_message }}"
+            echo "no_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push to base branch (if committed)
+        if: steps.commit.outputs.no_changes == 'false'
+        env:
+          REPO_PUSH_TOKEN: ${{ secrets.REPO_PUSH_TOKEN }}
+        run: |
+          set -e
+          REPO_URL="https://x-access-token:${REPO_PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push "${REPO_URL}" HEAD:${{ inputs.base_branch }}
+
+      - name: Finish (nothing changed)
+        if: steps.commit.outputs.no_changes == 'true'
+        run: echo "No changes applied; nothing to push."

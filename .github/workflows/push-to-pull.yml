@@ -1,0 +1,111 @@
+name: push-to-pull
+
+on:
+  workflow_dispatch:
+    inputs:
+      topic_branch:
+        description: 'Topic branch to push changes to (will be created/updated)'
+        required: false
+        default: 'latest'
+      base_branch:
+        description: 'Base branch for PR'
+        required: false
+        default: '1.21.1'
+      commit_message:
+        description: 'Commit message for the changes'
+        required: false
+        default: 'Apply changes from .changes'
+      pr_title:
+        description: 'PR title'
+        required: false
+        default: 'Automated update from .changes'
+      pr_body:
+        description: 'PR body/description'
+        required: false
+        default: 'Applied files from .changes/ as requested'
+      author_name:
+        description: 'Commit author name'
+        required: false
+        default: 'EverShy'
+      author_email:
+        description: 'Commit author email'
+        required: false
+        default: 'evershy@github.com'
+
+jobs:
+  apply_and_pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.base_branch }}
+
+      - name: Ensure topic branch exists locally
+        run: |
+          set -e
+          TOPIC=${{ inputs.topic_branch }}
+          if git show-ref --verify --quiet refs/heads/$TOPIC; then
+            git checkout $TOPIC
+            git reset --hard origin/$TOPIC || true
+          else
+            git checkout -b $TOPIC
+          fi
+
+      - name: Copy files from .changes into repo root
+        run: |
+          set -e
+          if [ ! -d ".changes" ]; then
+            echo "No .changes folder found. Put files you want to apply into a .changes/ directory and re-run."
+            exit 1
+          fi
+          rsync -a --delete .changes/ .
+
+      - name: Stage changes
+        run: |
+          git add -A
+          echo "Files staged (if any):"
+          git status --porcelain
+
+      - name: Configure git author
+        run: |
+          git config user.name "${{ inputs.author_name }}"
+          git config user.email "${{ inputs.author_email }}"
+
+      - name: Commit changes if any
+        id: commit
+        run: |
+          if git diff --cached --quiet; then
+            echo "no_changes=true" >> $GITHUB_OUTPUT
+            echo "No changes to commit."
+          else
+            git commit -m "${{ inputs.commit_message }}"
+            echo "no_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push topic branch (if committed)
+        if: steps.commit.outputs.no_changes == 'false'
+        env:
+          REPO_PUSH_TOKEN: ${{ secrets.REPO_PUSH_TOKEN }}
+        run: |
+          set -e
+          BRANCH="${{ inputs.topic_branch }}"
+          REPO_URL="https://x-access-token:${REPO_PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push --set-upstream "${REPO_URL}" HEAD:$BRANCH
+
+      - name: Create PR (if committed)
+        if: steps.commit.outputs.no_changes == 'false'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.REPO_PUSH_TOKEN }}
+          commit-message: ${{ inputs.commit_message }}
+          title: ${{ inputs.pr_title }}
+          body: ${{ inputs.pr_body }}
+          head: ${{ inputs.topic_branch }}
+          base: ${{ inputs.base_branch }}
+          draft: false
+
+      - name: Finish (nothing changed)
+        if: steps.commit.outputs.no_changes == 'true'
+        run: echo "No changes applied; nothing to push or PR."
